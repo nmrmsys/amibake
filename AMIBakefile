@@ -1,0 +1,10 @@
+# AMIBakefile: my_app
+MAINTAINER nmrmsys
+FROM amazonlinux:201703
+USER ec2-user
+#BUILDER "vpc_id":"vpc-xxxxxxxx","subnet_id":"subnet-xxxxxxxx","associate_public_ip_address":true
+
+COPY html/index.html ~/
+RUN sudo yum install -y httpd
+RUN sudo chkconfig httpd on
+RUN sudo mv ~/index.html /var/www/html/
