@@ -84,22 +84,22 @@ Build(){
     IFS_BAK=$IFS
     IFS=$'\n'
     for line in `cat $bakefile`; do
-      if [[ $line =~ ^FROM[[:space:]]+(.*)[[:cntrl:]] ]]; then
+      if [[ $line =~ ^FROM[[:space:]]+(.*)[[:cntrl:]]*$ ]]; then
         from="${BASH_REMATCH[1]}"
         source_ami=$from
       fi
-      if [[ $line =~ ^USER[[:space:]]+(.*)[[:cntrl:]] ]]; then
+      if [[ $line =~ ^USER[[:space:]]+(.*)[[:cntrl:]]*$ ]]; then
         user="${BASH_REMATCH[1]}"
       fi
-      if [[ $line =~ ^BUILDER[[:space:]]+(.*)[[:cntrl:]] ]]; then
+      if [[ $line =~ ^BUILDER[[:space:]]+(.*)[[:cntrl:]]*$ ]]; then
         builder="            ,${BASH_REMATCH[1]}\n"
       fi
-      if [[ $line =~ ^COPY[[:space:]]+(.*)[[:space:]]+(.*)[[:cntrl:]] ]]; then
+      if [[ $line =~ ^COPY[[:space:]]+(.*)[[:space:]]+(.*)[[:cntrl:]]*$ ]]; then
         src="${BASH_REMATCH[1]}"
         dst="${BASH_REMATCH[2]}"
         copy="$copy        {\n            \"type\": \"file\",\n            \"source\": \"$src\",\n            \"destination\": \"$dst\"\n        },\n"
       fi
-      if [[ $line =~ ^RUN[[:space:]]+(.*)[[:cntrl:]] ]]; then
+      if [[ $line =~ ^RUN[[:space:]]+(.*)[[:cntrl:]]*$ ]]; then
         run="$run                ,\"${BASH_REMATCH[1]}\"\n"
       fi
     done
@@ -160,13 +160,13 @@ EOF
     IFS_BAK=$IFS
     IFS=$'\n'
     for line in `grep -A4 "$prof_grep" ~/.aws/config`; do
-      if [[ $line =~ ^aws_access_key_id[[:space:]]=[[:space:]](.*)[[:cntrl:]] ]]; then
+      if [[ $line =~ ^aws_access_key_id[[:space:]]=[[:space:]](.*)[[:cntrl:]]*$ ]]; then
         access_key="${BASH_REMATCH[1]}"
       fi
-      if [[ $line =~ ^aws_secret_access_key[[:space:]]=[[:space:]](.*)[[:cntrl:]] ]]; then
+      if [[ $line =~ ^aws_secret_access_key[[:space:]]=[[:space:]](.*)[[:cntrl:]]*$ ]]; then
         secret_key="${BASH_REMATCH[1]}"
       fi
-      if [[ $line =~ ^region[[:space:]]=[[:space:]](.*)[[:cntrl:]] ]]; then
+      if [[ $line =~ ^region[[:space:]]=[[:space:]](.*)[[:cntrl:]]*$ ]]; then
         region="${BASH_REMATCH[1]}"
       fi
     done
@@ -174,7 +174,7 @@ EOF
 
     # execute packer
     build_ami_id=""
-    packer build -var "access_key=$access_key" -var "secret_key=$secret_key" -var "region=$region" $AMIBAKE_PACKER_TPL | tee $AMIBAKE_PACKER_LOG
+    ./packer build -var "access_key=$access_key" -var "secret_key=$secret_key" -var "region=$region" $AMIBAKE_PACKER_TPL | tee $AMIBAKE_PACKER_LOG
     build_ami_id=(`cat $AMIBAKE_PACKER_LOG | tail -2 | head -2 | awk 'match($0, /ami-.*/) { print substr($0, RSTART, RLENGTH) }'`)
     if [ -z "$build_ami_id" ]; then
       echo "packer build error"
