@@ -44,6 +44,10 @@ Main(){
       # run name:tag or ami-id [key_name] [inst_type] [sg_id]
       Run ${PRAMS[1]} ${PRAMS[2]} ${PRAMS[3]} ${PRAMS[4]}
       ;;
+    'rmi' )
+      # rmi name:tag or ami-id
+      Rmi ${PRAMS[1]}
+      ;;
   esac
 
 }
@@ -58,6 +62,7 @@ Usage: $PROGNAME <command> [--profile <prof>] [more options]
       $PROGNAME build
       $PROGNAME push my_app:20170819
       $PROGNAME run my_app:20170819
+      $PROGNAME rmi my_app:20170819
 EOF
 }
 
@@ -230,6 +235,15 @@ Run(){
   aws $PROF_OPT ec2 run-instances $ami_id $sg_id $inst_type $key_name > /dev/null
 }
 
+Rmi(){
+  ami_id=$1
+  if [[ ! $ami_id =~ ^ami\- ]]; then
+    ami_info=(`./$PROGNAME $PROF_OPT search $ami_id | head -n 1`)
+    ami_id=${ami_info[0]}
+  fi
+  DeleteAMI $ami_id
+}
+
 DeleteAMI(){
   ami_id=$1
   #echo "Delete AMI $ami_id $ami_nm"
@@ -299,7 +313,7 @@ for OPT in "$@"; do
 done
 
 # no required argument
-if [[ ! ${PRAMS[0]} =~ (tag|search|build|push|run) ]]; then
+if [[ ! ${PRAMS[0]} =~ (tag|search|build|push|run|rmi) ]]; then
   Usage
   exit 1
 fi
