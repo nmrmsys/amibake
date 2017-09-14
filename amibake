@@ -18,6 +18,7 @@ bakefile="AMIBakefile"
 Main(){
   # Initial setting
   cmd=${PRAMS[0]}
+  scr_dir=$(cd $(dirname $0) && pwd)
 
   if [ ! -d ./.amibake ]; then
     mkdir ./.amibake
@@ -114,7 +115,7 @@ Build(){
     done
     IFS=$IFS_BAK
     if [[ ! $from =~ ^ami\- ]]; then
-      ami_info=(`./$PROGNAME $PROF_OPT search "$from" | head -n 1`)
+      ami_info=(`$scr_dir/$PROGNAME $PROF_OPT search "$from" | head -n 1`)
       source_ami=${ami_info[0]}
     fi
     # write packer template
@@ -183,7 +184,7 @@ EOF
 
     # execute packer
     build_ami_id=""
-    ./packer build -var "access_key=$access_key" -var "secret_key=$secret_key" -var "region=$region" ./.amibake/${PROF:-default}$AMIBAKE_PACKER_TPL | tee ./.amibake/${PROF:-default}$AMIBAKE_PACKER_LOG
+    $scr_dir/packer build -var "access_key=$access_key" -var "secret_key=$secret_key" -var "region=$region" ./.amibake/${PROF:-default}$AMIBAKE_PACKER_TPL | tee ./.amibake/${PROF:-default}$AMIBAKE_PACKER_LOG
     build_ami_id=(`cat ./.amibake/${PROF:-default}$AMIBAKE_PACKER_LOG | tail -2 | head -2 | awk 'match($0, /ami-.*/) { print substr($0, RSTART, RLENGTH) }'`)
     if [ -z "$build_ami_id" ]; then
       echo "packer build error"
@@ -211,7 +212,7 @@ Push(){
     tmp=${name_tag[1]}
     tag=${tmp:-latest}
     ami_id=`cat ./.amibake/${PROF:-default}$AMIBAKE_AMI_ID`
-    ./$PROGNAME $PROF_OPT tag $ami_id "$name:$tag"
+    $scr_dir/$PROGNAME $PROF_OPT tag $ami_id "$name:$tag"
     rm ./.amibake/${PROF:-default}$AMIBAKE_AMI_ID
   else
     echo "build image not found."
@@ -221,7 +222,7 @@ Push(){
 Run(){
   ami_id=$1
   if [[ ! $ami_id =~ ^ami\- ]]; then
-    ami_info=(`./$PROGNAME $PROF_OPT search $ami_id | head -n 1`)
+    ami_info=(`$scr_dir/$PROGNAME $PROF_OPT search $ami_id | head -n 1`)
     ami_id=${ami_info[0]}
   fi
   ami_id="--image-id $ami_id"
@@ -238,7 +239,7 @@ Run(){
 Rmi(){
   ami_id=$1
   if [[ ! $ami_id =~ ^ami\- ]]; then
-    ami_info=(`./$PROGNAME $PROF_OPT search $ami_id | head -n 1`)
+    ami_info=(`$scr_dir/$PROGNAME $PROF_OPT search $ami_id | head -n 1`)
     ami_id=${ami_info[0]}
   fi
   DeleteAMI $ami_id
